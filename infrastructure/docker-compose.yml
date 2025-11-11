@@ -1,0 +1,135 @@
+services:
+  # API Gateway
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    ports:
+      - "4000:3000"
+    environment:
+      - PORT=3000
+      - NATS_URL=nats://nats:4222
+      - NODE_ENV=development
+    depends_on:
+      - postgres
+      - nats
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Booking Service
+  booking-service:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.booking
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:secretpassword@postgres:5432/booking_db?schema=public
+      - NATS_URL=nats://nats:4222
+      - NODE_ENV=development
+    depends_on:
+      - postgres
+      - nats
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=booking_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secretpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # NATS Messaging
+  nats:
+    image: nats:2.10
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+      - "6222:6222"
+    command: ["-js"]  # Enable JetStream for persistent messaging
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Redis for rate limiting
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Loki for logging
+  loki:
+    image: grafana/loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Nginx as reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  grafana_data:
+
+networks:
+  app-network:
+    driver: bridge

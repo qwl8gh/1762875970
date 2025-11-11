@@ -1,0 +1,47 @@
+{
+  "name": "event-booking-system",
+  "version": "1.0.0",
+  "description": "Modern event booking system with NestJS, Prisma, and comprehensive DevOps setup",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm run build:libs && pnpm run build:apps",
+    "build:libs": "pnpm --filter @event-booking/database build && pnpm --filter @event-booking/shared build",
+    "build:apps": "pnpm --filter @event-booking/api-gateway build && pnpm --filter @event-booking/booking-service build",
+    "build:docker": "docker-compose -f infrastructure/docker-compose.dev.yml build",
+    "up:docker": "docker-compose -f infrastructure/docker-compose.dev.yml up",
+    "down:docker": "docker-compose -f infrastructure/docker-compose.dev.yml down",
+
+    "dev": "pnpm run dev:apps",
+    "dev:apps": "pnpm --parallel --filter @event-booking/api-gateway --filter @event-booking/booking-service run start:dev",
+    "dev:libs": "pnpm --parallel --filter @event-booking/database --filter @event-booking/shared run build:watch",
+
+    "lint": "pnpm --recursive run lint",
+    "test": "pnpm --recursive run test",
+    "format": "pnpm --recursive run format"
+  },
+  "keywords": [
+    "nestjs",
+    "booking",
+    "event",
+    "monorepo",
+    "typescript",
+    "prisma",
+    "nats"
+  ],
+  "author": "Event Booking System",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "typescript": "$typescript"
+    },
+    "workspaces": [
+      "apps/*",
+      "libs/*",
+      "load-testing"
+    ]
+  }
+}

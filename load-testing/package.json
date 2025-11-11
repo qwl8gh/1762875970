@@ -1,0 +1,16 @@
+{
+  "name": "@event-booking/load-testing",
+  "version": "1.0.0",
+  "description": "Load testing scripts for event booking system",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test:booking": "k6 run booking-test.js",
+    "test:stress": "k6 run --vus 100 --duration 30s booking-test.js",
+    "test:high-load": "k6 run booking-test-high-load.js",
+    "test:booking-short": "k6 run booking-test-short.js"
+  },
+  "dependencies": {
+    "k6": "^0.0.0"
+  }
+}

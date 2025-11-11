@@ -1,0 +1,85 @@
+services:
+  # API Gateway
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NATS_URL=nats://nats:4222
+      - NODE_ENV=development
+    # volumes:
+    #   - ../../apps/api-gateway/src:/app/apps/api-gateway/src
+    depends_on:
+      - postgres
+      - nats
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Booking Service
+  booking-service:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.booking
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:secretpassword@postgres:5432/booking_db?schema=public
+      - NATS_URL=nats://nats:4222
+      - NODE_ENV=development
+    # volumes:
+    #   - ../../libs/database:/app/libs/database
+    depends_on:
+      - postgres
+      - nats
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=booking_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secretpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # NATS Messaging
+  nats:
+    image: nats:2.10
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+      - "6222:6222"
+    command: ["-js"]  # Enable JetStream for persistent messaging
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Redis for rate limiting
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,43 @@
+FROM node:18-alpine AS base
+
+# Install pnpm globally and required SSL libraries for Prisma
+RUN apk add --no-cache openssl && npm install -g pnpm
+
+WORKDIR /app
+
+# Copy root package.json and pnpm-workspace.yaml
+COPY package.json pnpm-workspace.yaml ./
+
+# Copy all workspace package.json files
+COPY apps/api-gateway/package.json ./apps/api-gateway/package.json
+COPY apps/booking-service/package.json ./apps/booking-service/package.json
+COPY libs/shared/package.json ./libs/shared/package.json
+COPY libs/database/package.json ./libs/database/package.json
+COPY load-testing/package.json ./load-testing/package.json
+
+# Install dependencies
+RUN pnpm install --no-frozen-lockfile
+
+# Install dev dependencies globally to make sure nest command is available
+RUN npm install -g @nestjs/cli typescript
+
+# Copy source code
+COPY . .
+
+# Install dependencies again after copying source to ensure all dependencies are available
+RUN CI=true pnpm install --no-frozen-lockfile
+
+# Generate Prisma client
+RUN cd libs/database && pnpm exec prisma generate
+
+# Build the entire workspace to ensure proper linking
+RUN pnpm build
+
+# Verify the built files exist
+RUN ls -la /app/apps/booking-service/dist/
+
+# Expose port
+EXPOSE 3001
+
+# Default command - FIXED: Use absolute path
+CMD ["sh", "-c", "cd /app/libs/database && npx prisma migrate deploy --schema=prisma/schema.prisma && node /app/apps/booking-service/dist/apps/booking-service/src/main"]

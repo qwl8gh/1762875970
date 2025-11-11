@@ -1,0 +1,52 @@
+{
+  "collection": "@nestjs/schematics",
+  "monorepo": true,
+  "root": ".",
+  "compilerOptions": {
+    "webpack": false,
+    "deleteOutDir": true,
+    "tsConfigPath": "tsconfig.json"
+  },
+  "projects": {
+    "api-gateway": {
+      "type": "application",
+      "root": "apps/api-gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/api-gateway/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/api-gateway/tsconfig.json",
+        "webpack": false,
+        "outputPath": "dist/apps/api-gateway"
+      }
+    },
+    "booking-service": {
+      "type": "application",
+      "root": "apps/booking-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/booking-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/booking-service/tsconfig.json",
+        "webpack": false,
+        "outputPath": "dist/apps/booking-service"
+      }
+    },
+    "database": {
+      "type": "library",
+      "root": "libs/database",
+      "entryFile": "index",
+      "sourceRoot": "libs/database/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/database/tsconfig.json"
+      }
+    },
+    "shared": {
+      "type": "library",
+      "root": "libs/shared",
+      "entryFile": "index",
+      "sourceRoot": "libs/shared/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/shared/tsconfig.json"
+      }
+    }
+  }
+}

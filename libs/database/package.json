@@ -1,0 +1,28 @@
+{
+  "name": "@event-booking/database",
+  "version": "1.0.0",
+  "description": "Database utilities and Prisma schema for event booking system",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "prisma generate && tsc",
+    "build:watch": "prisma generate && tsc --watch",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "lint": "eslint \"{src,prisma}/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"prisma/**/*.ts\""
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.0.0",
+    "typescript": "^5.0.0"
+  }
+}
